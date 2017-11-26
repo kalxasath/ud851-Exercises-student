@@ -21,6 +21,7 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -35,6 +36,8 @@ import java.net.URL;
 
 public class MainActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<String> {
+
+    private static String TAG = MainActivity.class.getSimpleName() + "_GV";
 
     /* A constant to save and restore the URL that is being displayed */
     private static final String SEARCH_QUERY_URL_EXTRA = "query";
@@ -77,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements
         /*
          * Initialize the loader
          */
+        Log.i(TAG, "onCreate::Initialize Loader");
         getSupportLoaderManager().initLoader(GITHUB_SEARCH_LOADER, null, this);
     }
 
@@ -86,6 +90,7 @@ public class MainActivity extends AppCompatActivity implements
      * that URL in a TextView, and finally request that an AsyncTaskLoader performs the GET request.
      */
     private void makeGithubSearchQuery() {
+        Log.i(TAG, "makeGithubSearchQuery called from menu search");
         String githubQuery = mSearchBoxEditText.getText().toString();
 
         /*
@@ -100,7 +105,7 @@ public class MainActivity extends AppCompatActivity implements
          * was the simplest.
          */
         if (TextUtils.isEmpty(githubQuery)) {
-            mUrlDisplayTextView.setText("No query entered, nothing to search for.");
+            mUrlDisplayTextView.setText("makeGithubSearchQuery::No query entered, nothing to search for.");
             return;
         }
 
@@ -127,8 +132,10 @@ public class MainActivity extends AppCompatActivity implements
         LoaderManager loaderManager = getSupportLoaderManager();
         Loader<String> githubSearchLoader = loaderManager.getLoader(GITHUB_SEARCH_LOADER);
         if (githubSearchLoader == null) {
+            Log.i(TAG, "makeGithubSearchQuery::loaderManager.initLoader");
             loaderManager.initLoader(GITHUB_SEARCH_LOADER, queryBundle, this);
         } else {
+            Log.i(TAG, "makeGithubSearchQuery::loaderManager.restartLoader");
             loaderManager.restartLoader(GITHUB_SEARCH_LOADER, queryBundle, this);
         }
     }
@@ -163,15 +170,20 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public Loader<String> onCreateLoader(int id, final Bundle args) {
+        Log.i(TAG, "onCreateLoader::return new AsyncTaskLoader");
+
         return new AsyncTaskLoader<String>(this) {
 
             // TODO (1) Create a String member variable called mGithubJson that will store the raw JSON
+            String mGithubJson;
 
             @Override
             protected void onStartLoading() {
 
+                Log.i(TAG, " :: AsyncTaskLoader::onStartLoading");
                 /* If no arguments were passed, we don't have a query to perform. Simply return. */
                 if (args == null) {
+                    Log.i(TAG, " :: AsyncTaskLoader::onStartLoading::no data, return");
                     return;
                 }
 
@@ -182,12 +194,21 @@ public class MainActivity extends AppCompatActivity implements
                 mLoadingIndicator.setVisibility(View.VISIBLE);
 
                 // TODO (2) If mGithubJson is not null, deliver that result. Otherwise, force a load
-                forceLoad();
+                Log.i(TAG, " :: AsyncTaskLoader::onStartLoading::mGithubJson = " + (mGithubJson != null ? "has data" : "null"));
+
+                if (mGithubJson != null) {
+                    Log.i(TAG, " :: AsyncTaskLoader::onStartLoading::call deliverResult with: " + mGithubJson.substring(1, 10));
+                    deliverResult(mGithubJson);
+                } else {
+                    Log.i(TAG, " :: AsyncTaskLoader::onStartLoading::call forceLoad");
+                    forceLoad();
+                }
             }
 
             @Override
             public String loadInBackground() {
 
+                Log.i(TAG, " :: AsyncTaskLoader::loadInBackground");
                 /* Extract the search query from the args using our constant */
                 String searchQueryUrlString = args.getString(SEARCH_QUERY_URL_EXTRA);
 
@@ -208,13 +229,23 @@ public class MainActivity extends AppCompatActivity implements
             }
 
             // TODO (3) Override deliverResult and store the data in mGithubJson
-            // TODO (4) Call super.deliverResult after storing the data
+
+            @Override
+            public void deliverResult(String data) {
+                Log.i(TAG, " :: AsyncTaskLoader::deliverResult: data.substring(1, 10)=" + data.substring(1, 10));
+                mGithubJson = data;
+                Log.i(TAG, " :: AsyncTaskLoader::deliverResult::mGithubJson = " + (mGithubJson != null ? "has data" : "null"));
+                // TODO (4) Call super.deliverResult after storing the data
+                super.deliverResult(data);
+            }
+
         };
     }
 
     @Override
     public void onLoadFinished(Loader<String> loader, String data) {
 
+        Log.i(TAG, "onLoadFinished: data.substring(1, 10)=" + data.substring(1, 10));
         /* When we finish loading, we want to hide the loading indicator from the user. */
         mLoadingIndicator.setVisibility(View.INVISIBLE);
         /*
