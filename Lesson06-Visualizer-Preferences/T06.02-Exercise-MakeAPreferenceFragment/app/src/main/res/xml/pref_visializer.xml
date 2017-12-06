@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="@string/show_bass_key"
+        android:summaryOff="@string/show_bass_summaryOff"
+        android:summaryOn="@string/show_bass_summaryOn"
+        android:title="@string/show_bass_title"
+        />
+</PreferenceScreen>
