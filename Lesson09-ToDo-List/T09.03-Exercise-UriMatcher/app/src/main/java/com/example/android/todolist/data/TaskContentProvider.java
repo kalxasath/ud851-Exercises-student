@@ -19,6 +19,7 @@ package com.example.android.todolist.data;
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.UriMatcher;
 import android.database.Cursor;
 import android.net.Uri;
 import android.support.annotation.NonNull;
@@ -26,13 +27,31 @@ import android.support.annotation.NonNull;
 // Verify that TaskContentProvider extends from ContentProvider and implements required methods
 public class TaskContentProvider extends ContentProvider {
 
-    // TODO (1) Define final integer constants for the directory of tasks and a single item.
+    // COMPLETED (1) Define final integer constants for the directory of tasks and a single item.
     // It's convention to use 100, 200, 300, etc for directories,
     // and related ints (101, 102, ..) for items in that directory.
+    public static final int TASKS = 100;
+    public static final int TASK_WITH_ID = 101;
 
-    // TODO (3) Declare a static variable for the Uri matcher that you construct
+    // Now let's actually build our UriMatcher and associate these constants with the correct URI.
+    // COMPLETED (3) Declare a static variable for the Uri matcher that you construct
+    private static final UriMatcher sUriMatcher = buildUriMatcher();
+    // this is a member variable but starts with a lowercase s because it's static variable.
 
-    // TODO (2) Define a static buildUriMatcher method that associates URI's with their int match
+    // COMPLETED (2) Define a static buildUriMatcher method that associates URI's with their int match
+    public static UriMatcher buildUriMatcher() {
+        // first create a new UriMatcher object, by passing in the constant UriMatcher.nomatch
+        UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+        // Add the matches you want, by telling it which URI structures to recognize
+        // and the integer constants they'll match with.
+        // Using the method addURI(String authority, String path, int code)
+        // directory
+        uriMatcher.addURI(TaskContract.AUTHORITY, TaskContract.PATH_TASKS, TASKS);
+        // single item
+        uriMatcher.addURI(TaskContract.AUTHORITY, TaskContract.PATH_TASKS + "/#", TASK_WITH_ID);
+
+        return uriMatcher;
+    }
 
     // Member variable for a TaskDbHelper that's initialized in the onCreate() method
     private TaskDbHelper mTaskDbHelper;

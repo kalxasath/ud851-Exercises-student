@@ -156,14 +156,55 @@ public class TaskContentProvider extends ContentProvider {
     @Override
     public int delete(@NonNull Uri uri, String selection, String[] selectionArgs) {
 
-        // TODO (1) Get access to the database and write URI matching code to recognize a single item
+        // COMPLETED (1) Get access to the database and write URI matching code to recognize a single item
+        final SQLiteDatabase db = mTaskDbHelper.getWritableDatabase();
 
-        // TODO (2) Write the code to delete a single row of data
+        int match = sUriMatcher.match(uri);
+        int retDeletedRecord = 0; // starts as 0
+
+        // COMPLETED (2) Write the code to delete a single row of data
         // [Hint] Use selections to delete an item by its row ID
+        switch (match) {
+            case TASK_WITH_ID:
+                // To Delete a row of data by its ID, we'll use the selection and
+                // selection args parameters of the delete method.
+                // First we'll have to get the row ID from the past URI.
+                // The URI will look similar to the tasks directory URI.
+                // It'll start with the same scheme authority and tasks path.
+                // But this time also with an ID as the part of the path.
+                // And we can grab this ID by Using a call to get path segments on that URI.
+                // And get with the index 1 passed in.
+                // Index 0 would be the tasks portion of the path.
+                // And index 1 is the segment right next to that.
+                // Get the id from the URI
+                String id = uri.getPathSegments().get(1);
 
-        // TODO (3) Notify the resolver of a change and return the number of items deleted
+                // Selection is the _ID column = ?, and the Selection args = the row ID from the URI
+                // The question mark indicates that this is asking for
+                String mSelection = "_id=?";
 
-        throw new UnsupportedOperationException("Not yet implemented");
+                // the rest of this equality from the selection args parameter.
+                // And the selection args should be the row ID which we just got from the past URI.
+                // And selection args has to be an array of strings.
+                String[] mSelectionArgs = new String[]{id};
+
+                // delete the desired record by passing in the selection/args
+                // return the number of rows deleted
+                retDeletedRecord =  db.delete(TABLE_NAME,
+                        mSelection,
+                        mSelectionArgs);
+                break;
+            default:
+                throw new UnsupportedOperationException("Unknown uri: " + uri);
+        }
+
+        // COMPLETED (3) Notify the resolver of a change and return the number of items deleted
+        if (retDeletedRecord > 0) {
+            // Task was deleted, set notification
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+
+        return retDeletedRecord;
     }
 
 

@@ -16,12 +16,13 @@
 
 package com.example.android.todolist.data;
 
+import android.net.Uri;
 import android.provider.BaseColumns;
 
 
 public class TaskContract {
 
-    /* TODO (1) Add content provider constants to the Contract
+    /* Add content provider constants to the Contract
      Clients need to know how to access the task data, and it's your job to provide
      these content URI's for the path to that data:
         1) Content authority,
@@ -29,11 +30,30 @@ public class TaskContract {
         3) Path(s) to the tasks directory
         4) Content URI for data in the TaskEntry class
       */
+    // The authority, which is how your code knows which Content Provider to access
+    // The authority is defined in the Android Manifest, so copy and paste it from there.
+    public static final String AUTHORITY = "com.example.android.todolist";
 
+    // The base content URI = "content://" + <authority>
+    public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + AUTHORITY);
+
+    // Define the possible paths for accessing data in this contract
+    // This is the path for the "tasks" directory, that will be appended to the base content URI
+    public static final String PATH_TASKS = "tasks";
+    // If the provider kept track of multiple tables of data, you would include multiple
+    // corresponding path constants here.
 
     /* TaskEntry is an inner class that defines the contents of the task table */
     public static final class TaskEntry implements BaseColumns {
 
+        // Finally, inside this task entry class in the contract,
+        // which keeps track of the data that a task entry contains,
+        // you should create a complete URI for these entries as a constant
+        // called Content URI.
+        // TaskEntry content URI = base content URI + path
+        public static final Uri CONTENT_URI =
+                BASE_CONTENT_URI.buildUpon().appendPath(PATH_TASKS).build();
+        // This final content URI will include the scheme, the authority, and our tasks path.
 
         // Task table and column names
         public static final String TABLE_NAME = "tasks";

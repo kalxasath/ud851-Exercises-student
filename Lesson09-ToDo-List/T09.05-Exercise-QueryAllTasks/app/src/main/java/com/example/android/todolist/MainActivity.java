@@ -27,7 +27,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.View;
+
+import com.example.android.todolist.data.TaskContract;
 
 
 public class MainActivity extends AppCompatActivity implements
@@ -111,6 +114,9 @@ public class MainActivity extends AppCompatActivity implements
         super.onResume();
 
         // re-queries for all tasks
+        // we restart the loader so that any time you leave the main activity and return,
+        // like when you go to AddTaskActivity to insert a new task, the loader will
+        // restart and update the UI.
         getSupportLoaderManager().restartLoader(TASK_LOADER_ID, null, this);
     }
 
@@ -146,10 +152,34 @@ public class MainActivity extends AppCompatActivity implements
             public Cursor loadInBackground() {
                 // Will implement to load data
 
-                // TODO (5) Query and load all task data in the background; sort by priority
+                // COMPLETED (5) Query and load all task data in the background; sort by priority
                 // [Hint] use a try/catch block to catch any errors in loading data
+                // We use a content resolver to query for the tasks directory.
+                // We'll surround our query in a try-catch, which menas we'll try to
+                // query and catch any error that may occur while loading data.
+                try {
+                    // We'll try to return a cursor of data.
+                    // We'll call query on the content resolver and
+                    // pass in the CONTENT_URI that points to our tasks directory.
+                    // The projection and selection arguments will all be null, since by default,
+                    // null will select all the data.
+                    // The last argument we're going to pass in will be the sort order
+                    // And we actually want to sort by priority, so that the higher
+                    // priority tasks show up at the top of our list.
+                    // So we'll put in COLUMN_PRIORITY as this last argument.
+                    // After this data is loaded, this callback method returns this cursor
+                    // And this cursor will actually be passed to our custom cursor adapter,
+                    // which creates the task views in the main recycler view.
+                    return getContentResolver().query(TaskContract.TaskEntry.CONTENT_URI,
+                            null, null, null,
+                            TaskContract.TaskEntry.COLUMN_PRIORITY);
 
-                return null;
+                } catch (Exception e) {
+                    // Just log any errors if the data fails to load, and return a null cursor
+                    Log.e(TAG, "Failed to asynchronously loada data.");
+                    e.printStackTrace();
+                    return null;
+                }
             }
 
             // deliverResult sends the result of the load, a Cursor, to the registered listener

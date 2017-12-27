@@ -17,10 +17,12 @@
 package com.example.android.todolist.data;
 
 import android.content.ContentProvider;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 
@@ -78,16 +80,60 @@ public class TaskContentProvider extends ContentProvider {
 
     @Override
     public Uri insert(@NonNull Uri uri, ContentValues values) {
-        // TODO (1) Get access to the task database (to write new data to)
+        // COMPLETED (1) Get access to the task database (to write new data to)
+        // So that we can write new data to it, we'll use mTaskDbHelper.getWritableDatabase()
+        final SQLiteDatabase db = mTaskDbHelper.getWritableDatabase();
 
-        // TODO (2) Write URI matching code to identify the match for the tasks directory
+        // COMPLETED (2) Write URI matching code to identify the match for the tasks directory
+        // This match will be either 100 for all tasks or 101 for a task with ID, or an unrecognized URI
+        int match = sUriMatcher.match(uri);
 
-        // TODO (3) Insert new values into the database
-        // TODO (4) Set the value for the returnedUri and write the default case for unknown URI's
+        // COMPLETED (3) Insert new values into the database
+        // COMPLETED (4) Set the value for the returnedUri and write the default case for unknown URI's
 
-        // TODO (5) Notify the resolver if the uri has been changed, and return the newly inserted URI
+        Uri returnUri;
 
-        throw new UnsupportedOperationException("Not yet implemented");
+        // We want to check these cases with a switch case and respond to only the tasks case.
+        // If the tasks case is met, we can insert a new row of data into this directory.
+        // We can't insert data into just one row like in the task with id case.
+        // And if we receive any other type URI or an invalid one, the default behavior
+        // will be to throw an UnsupportedOperationException and print out an
+        // Unknown uri message.
+        switch(match) {
+            case TASKS:
+                // We'll insert new data into the tasks directory by calling insert om our database.
+                // Inserting values into tasks table
+                long id = db.insert(TaskContract.TaskEntry.TABLE_NAME, null, values);
+                // If the insert wasn't successful, this ID will be -1
+                // But if ths insert is successful, we want the provider's insert method to take
+                // that unique row ID and create and return a URI for that newly inserted data.
+
+                // So first, let's write an if that checks that this insert was successful.
+                if ( id > 0 ) {
+                    // Success, the insert worked and we can construct the new URI
+                    // that will be our main content URI, which has the authority
+                    // and tasks path, with the id appended to it.
+                    returnUri = ContentUris.withAppendedId(TaskContract.TaskEntry.CONTENT_URI, id);
+                    // contentUris is an Android class that contains helper methods for
+                    // constructing URIs
+                } else {
+                    // Otherwise, we'll throw a SQLiteException, because the insert failed.
+                    throw new android.database.SQLException("Failed to insert row into " + uri);
+                }
+
+                break;
+            // Default case throws an UnsupportedOperationException
+            default:
+                throw new UnsupportedOperationException("Unknown uri: " + uri);
+        }
+
+        // COMPLETED (5) Notify the resolver if the uri has been changed, and return the newly inserted URI
+        // To notify the resolver that a change has occurred at this particular URI,
+        // you'll do this using the notify change function.
+        // This is so that the resolver knows that something jas changed, and
+        // can update the database and any associated UI accordingly
+        getContext().getContentResolver().notifyChange(uri, null);
+        return returnUri;
     }
 
 

@@ -120,15 +120,39 @@ public class TaskContentProvider extends ContentProvider {
     public Cursor query(@NonNull Uri uri, String[] projection, String selection,
                         String[] selectionArgs, String sortOrder) {
 
-        // TODO (1) Get access to underlying database (read-only for query)
+        // COMPLETED (1) Get access to underlying database (read-only for query)
+        // First by gaining access to our underlying database with a call
+        // to getReadableDatabase since we're just reading from it and not
+        // changing it.
+        final SQLiteDatabase db = mTaskDbHelper.getReadableDatabase();
 
-        // TODO (2) Write URI match code and set a variable to return a Cursor
+        // COMPLETED (2) Write URI match code and set a variable to return a Cursor
+        // Using our URI matcher to get a match number that identifies the passed in URI
+        int match = sUriMatcher.match(uri);
 
-        // TODO (3) Query for the tasks directory and write a default case
+        // COMPLETED (3) Query for the tasks directory and write a default case
+        // We know the method will be returning the cursor
+        Cursor retCursor;
 
-        // TODO (4) Set a notification URI on the Cursor and return that Cursor
+        // we write a switch statement to manage data correctly in the case we want.
+        switch (match) {
+            // Query for the tasks directory
+            case TASKS:
+                // This starting code will look pretty similar for all of our CRUD functions.
+                // The query for our tasks case, will return all the rows in our database as a cursor.
+                retCursor = db.query(TaskContract.TaskEntry.TABLE_NAME,
+                        projection, selection, selectionArgs, null, null, sortOrder);
+                break;
+            // default exception
+            default:
+                throw new UnsupportedOperationException("Unknown uri: " + uri);
+        }
 
-        throw new UnsupportedOperationException("Not yet implemented");
+        // COMPLETED (4) Set a notification URI on the Cursor to tell the cursor
+        // what content URI it was created for, and return that Cursor
+        retCursor.setNotificationUri(getContext().getContentResolver(), uri);
+
+        return retCursor;
     }
 
 
